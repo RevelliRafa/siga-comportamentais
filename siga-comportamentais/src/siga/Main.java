@@ -1,53 +1,46 @@
 package siga;
 
-/**
- * Demonstra os dois deslizes acontecendo. Execute e observe a saída:
- * é dela que partem as etapas da ficha de atividade prática.
- */
 public class Main {
-
     public static void main(String[] args) {
-        System.out.println("=== SIGA - Aula 12: Strategy e Observer (codigo inicial) ===");
+        System.out.println("==================================================");
+        System.out.println("  SIGA — DEMONSTRAÇÃO STRATEGY E OBSERVER");
+        System.out.println("==================================================");
 
-        Aluno bolsista = new Aluno("2024001", "Maria Silva");
-        bolsista.setBolsista(true);
+        // 1. Configuração do Publicador (Observer)
+        PublicadorMatricula publicador = new PublicadorMatricula();
 
-        Aluno egresso = new Aluno("2024003", "Ana Pereira");
-        egresso.setEgresso(true);
+        // Registro das reações originais
+        publicador.registrar(new NotificadorEmail());
+        publicador.registrar(new PainelVagas());
+        publicador.registrar(new AvisoCoordenacao()); // Esta reação lança exceção propositalmente
+        publicador.registrar(new RegistroAuditoria()); // Deve rodar mesmo com a falha acima
 
-        double valorBase = 800.00;
-        GeradorBoleto gerador = new GeradorBoleto();
+        // Etapa 5: Adicionando a 5ª reação SEM alterar a FachadaMatricula
+        publicador.registrar(new EstatisticaOcupacao());
 
-        System.out.println();
-        System.out.println("1) Desconto calculado em DOIS lugares diferentes");
-        for (Aluno a : new Aluno[] { bolsista, egresso }) {
-            Matricula m = new Matricula(a, "DSM-2A");
-            System.out.printf("   %-14s matricula: R$ %.2f%n",
-                    a.getNome(), m.calcularValor(valorBase));
-            gerador.emitir(a, valorBase);
-        }
-        System.out.println("   >> DESLIZE 1: Ana Pereira paga R$ 720,00 na matricula");
-        System.out.println("      e R$ 800,00 no boleto. A mesma cadeia de condicionais");
-        System.out.println("      existe nas duas classes, e o desconto de egresso");
-        System.out.println("      nunca chegou ao gerador de boletos.");
+        // 2. Instanciação da Fachada
+        FachadaMatricula fachada = new FachadaMatricula(publicador);
 
-        System.out.println();
-        System.out.println("2) Reacoes a matricula, todas dentro da fachada");
-        FachadaMatricula fachada = new FachadaMatricula();
-        fachada.matricular(bolsista, "DSM-2A", false);
+        // 3. Casos de Teste com Strategy (Descontos)
+        double valorPadrao = 800.00;
 
-        System.out.println();
-        System.out.println("   Agora com a turma lotada, e o aviso a coordenacao falhando:");
-        try {
-            fachada.matricular(egresso, "DSM-2B", true);
-        } catch (IllegalStateException e) {
-            System.out.println("   [erro] " + e.getMessage());
-        }
-        System.out.println("   >> DESLIZE 2: a falha de UMA reacao impediu a auditoria,");
-        System.out.println("      que vinha depois dela. E a quinta reacao sera a quinta");
-        System.out.println("      alteracao nesta mesma classe.");
+        Aluno alunoNormal = new Aluno("João Silva", "joao@fatec.sp.gov.br");
+        Matricula m1 = new Matricula(alunoNormal, valorPadrao, new SemDesconto());
 
-        System.out.println();
-        System.out.println("Sua tarefa: ver o README.md e a ficha de atividade pratica.");
+        Aluno alunoBolsista = new Aluno("Maria Santos", "maria@fatec.sp.gov.br");
+        Matricula m2 = new Matricula(alunoBolsista, valorPadrao, new DescontoBolsista());
+
+        Aluno alunoServidor = new Aluno("Pedro Oliveira", "pedro@fatec.sp.gov.br");
+        Matricula m3 = new Matricula(alunoServidor, valorPadrao, new DescontoServidor());
+
+        // Caso crítico: Ana Pereira (Egressa) - Deve ser R$ 720,00 tanto na matrícula quanto no boleto
+        Aluno alunaEgressa = new Aluno("Ana Pereira", "ana@fatec.sp.gov.br");
+        Matricula m4 = new Matricula(alunaEgressa, valorPadrao, new DescontoEgresso());
+
+        // Execução das matrículas através da fachada
+        fachada.matricular(m1);
+        fachada.matricular(m2);
+        fachada.matricular(m3);
+        fachada.matricular(m4);
     }
 }
