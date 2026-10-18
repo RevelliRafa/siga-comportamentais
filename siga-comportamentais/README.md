@@ -80,3 +80,12 @@ A matrícula voltou a decidir. Quem escolhe a política é **quem monta a matrí
 Conforme a ficha de atividade prática: identificadores em português, um arquivo `.java` por classe pública, código formatado, entrega no repositório Git com README e commits descritivos. O uso de IA para gerar o código é proibido nesta atividade (ver seção 5.3 da ficha).
 
 > **Projeto Integrador:** a Etapa 2 vence na **próxima aula (21/10)** e exige um padrão estrutural e um comportamental, ambos justificados. O que você produzir aqui pode ser aproveitado — o Strategy costuma ser a escolha mais segura, porque quase todo projeto tem uma regra que varia. Para o Observer, confirme antes que há de fato mais de uma reação ao acontecimento: uma lista de observadores com um elemento é uma lista que não precisava existir.
+
+## Respostas da Atividade
+
+### Etapa 1 — Localização da Divergência das Condicionais
+* **Ponto de divergência:** 
+  * Em `Matricula.calcularValor()`, existe a regra para o aluno egresso concedendo 10% de desconto (`valorBase * 0.90`).
+  * Em `GeradorBoleto.calcularValorDoBoleto()`, essa regra não foi incluída na cadeia de `if/else`, caindo diretamente no caso padrão (valor integral sem desconto).
+* **Aluno afetado:** **Ana Pereira** (egressa). Na matrícula é calculado o valor de **R$ 720,00**, mas o boleto emitido cobra **R$ 800,00**.
+* **Problema arquitetural:** Violação do princípio DRY (Don't Repeat Yourself) e do OCP (Open/Closed Principle). Cada nova política de desconto exige a modificação de duas classes independentes.
