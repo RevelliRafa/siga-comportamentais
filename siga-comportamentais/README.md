@@ -89,3 +89,23 @@ Conforme a ficha de atividade prática: identificadores em português, um arquiv
   * Em `GeradorBoleto.calcularValorDoBoleto()`, essa regra não foi incluída na cadeia de `if/else`, caindo diretamente no caso padrão (valor integral sem desconto).
 * **Aluno afetado:** **Ana Pereira** (egressa). Na matrícula é calculado o valor de **R$ 720,00**, mas o boleto emitido cobra **R$ 800,00**.
 * **Problema arquitetural:** Violação do princípio DRY (Don't Repeat Yourself) e do OCP (Open/Closed Principle). Cada nova política de desconto exige a modificação de duas classes independentes.
+## Relatório Técnico — Padrões Comportamentais (Strategy e Observer)
+
+### 1. Desafio 1: Divergência e Acoplamento em Regras de Negócio (Strategy)
+* **Diagnóstico Inicial:** As classes `Matricula` e `GeradorBoleto` continham cadeias duplicadas de `if/else` para calcular descontos. Quando a regra do aluno egresso (10%) foi criada, apenas `Matricula` foi atualizada, fazendo com que a aluna Ana Pereira pagasse R$ 720,00 na matrícula e R$ 800,00 no boleto. Qualquer alteração ou nova regra feria o Princípio Aberto/Fechado (OCP) e o DRY.
+* **Solução:** Aplicou-se o padrão **Strategy**:
+  * Definiu-se a interface `PoliticaDesconto` com os métodos `aplicar(double)` e `getDescricao()`.
+  * Criaram-se as estratégias concretas: `SemDesconto`, `DescontoBolsista` (50%), `DescontoServidor` (20%) e `DescontoEgresso` (10%). Cada percentual de desconto reside em uma única classe.
+  * `Matricula` recebe a política via injeção de dependência no construtor e delega o cálculo a ela.
+  * `GeradorBoleto` consulta a política da própria matrícula, eliminando todas as condicionais de ambas as classes.
+* **Resultado:** Unificação completa dos valores calculados; Ana Pereira paga exatamente R$ 720,00 em ambos os pontos, e a inclusão de novas regras não exige alterar classes existentes.
+
+### 2. Desafio 2: Acoplamento e Fragilidade de Reações (Observer)
+* **Diagnóstico Inicial:** A classe `FachadaMatricula` chamava diretamente e em sequência todas as reações à matrícula. Isso criava acoplamento rígido (cada nova reação exigia mexer na fachada) e vulnerabilidade: a exceção lançada propositalmente por `AvisoCoordenacao` interrompia a execução antes de atingir o `RegistroAuditoria`.
+* **Solução:** Aplicou-se o padrão **Observer**:
+  * Criou-se a interface `OuvinteMatricula` com o método `aoMatricular(Matricula)`.
+  * Criou-se a classe `PublicadorMatricula` para gerir o registo e a notificação dos ouvintes.
+  * O método `publicar` itera sobre uma cópia defensiva da lista de ouvintes e isola a execução de cada ouvinte dentro de um bloco `try-catch`.
+* **Resultado:** 
+  * A falha do `AvisoCoordenacao` é capturada e registada sem impedir a execução do `RegistroAuditoria`.
+  * Demonstrou-se a extensibilidade adicionando uma 5ª reação (`EstatisticaOcupacao`) apenas registando-a no publicador, sem tocar em uma única linha da `FachadaMatricula`.
