@@ -1,10 +1,9 @@
 package siga;
 
-/** Reação à matrícula. Pronta. Falha de propósito, para a etapa 4. */
-public class AvisoCoordenacao {
-
-    public void enviar(String codigoTurma) {
-        throw new IllegalStateException(
-                "servico de aviso indisponivel para " + codigoTurma);
+public class AvisoCoordenacao implements OuvinteMatricula {
+    @Override
+    public void aoMatricular(Matricula matricula) {
+        System.out.println("[COORDENAÇÃO] Tentando sincronizar com sistema legado da coordenação...");
+        throw new RuntimeException("Serviço legado da coordenação fora do ar!");
     }
 }
