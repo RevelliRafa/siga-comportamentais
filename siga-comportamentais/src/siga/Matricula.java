@@ -1,41 +1,38 @@
 package siga;
 
-/**
- * DESLIZE 1 (parte A) — a cadeia de condicionais de desconto, a mesma
- * situação-problema da Aula 3. Cada nova política obriga a alterar e
- * retestar esta classe, que já funcionava.
- */
 public class Matricula {
 
     private final Aluno aluno;
-    private final String codigoTurma;
+    private final double valorBase;
+    private final PoliticaDesconto politicaDesconto;
 
-    public Matricula(Aluno aluno, String codigoTurma) {
+    // Recebe a política por injeção de dependência no construtor
+    public Matricula(Aluno aluno, double valorBase, PoliticaDesconto politicaDesconto) {
         this.aluno = aluno;
-        this.codigoTurma = codigoTurma;
+        this.valorBase = valorBase;
+        this.politicaDesconto = politicaDesconto;
     }
 
     public Aluno getAluno() {
         return aluno;
     }
 
-    public String getCodigoTurma() {
-        return codigoTurma;
+    public double getValorBase() {
+        return valorBase;
     }
 
-    public double calcularValor(double valorBase) {
-        if (aluno.isBolsista()) {
-            return valorBase * 0.50;
-        } else if (aluno.isServidor()) {
-            return valorBase * 0.80;
-        } else if (aluno.isEgresso()) {
-            return valorBase * 0.90;
-        }
-        return valorBase;
+    public PoliticaDesconto getPoliticaDesconto() {
+        return politicaDesconto;
+    }
+
+    // Delega integralmente o cálculo à estratégia escolhida
+    public double calcularValor() {
+        return politicaDesconto.aplicar(valorBase);
     }
 
     @Override
     public String toString() {
-        return aluno.getNome() + " em " + codigoTurma;
+        return String.format("%s — Base: R$ %.2f | %s | Final: R$ %.2f",
+                aluno.getNome(), valorBase, politicaDesconto.getDescricao(), calcularValor());
     }
 }
